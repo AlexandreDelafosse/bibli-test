@@ -15,5 +15,25 @@
 
 .grille-tomes { display: flex; flex-wrap: wrap; gap: 6px; }
 .tome { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 4px; background: #4caf50; color: #fff; font-size: 13px; }
-.tome.non-lu { background: #f5a623; }
 .tome.manquant { background: #e0e0e0; color: #999; }
+#bloc-ajout { max-width: 600px; margin-bottom: 20px; }
+#bloc-ajout summary { cursor: pointer; font-weight: bold; }
+#form-ajout { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+#form-ajout input, #form-ajout select { padding: 6px; font-size: 16px; }
+#form-erreur { color: #c0392b; min-height: 1em; margin: 0; }
+.livre { cursor: pointer; }
+.livre h3 { margin: 0 0 4px; }
+.livre p { margin: 2px 0; }
+.tag { display: inline-block; background: #eee; border-radius: 10px; padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 12px; }
+.modes { display: flex; gap: 6px; margin: 10px 0; }
+.modes button { padding: 6px 12px; border: 1px solid #ccc; background: #fff; border-radius: 4px; cursor: pointer; }
+.modes button.actif { background: #333; color: #fff; }
+.legende { font-size: 12px; color: #666; margin: 4px 0 10px; }
+#vue-form { display: none; max-width: 600px; }
+#bloc-tomes { display: flex; flex-direction: column; gap: 8px; }
+.form-actions { display: flex; gap: 8px; }
+#bouton-ajouter { margin-bottom: 16px; padding: 8px 14px; cursor: pointer; }
+.actions-livre { display: flex; gap: 8px; margin: 10px 0; }
+.tome { position: relative; }
+.tome.avec-note::after { content: ""; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+.notes { padding-left: 18px; font-size: 14px; }

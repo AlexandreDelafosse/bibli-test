@@ -1,24 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+    <title>Ma bibliothèque</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-    <h1> Ma bibliothèque</h1>
+    <h1>Ma bibliothèque</h1>
 
     <section id="vue-liste">
         <h2>Mes livres</h2>
-
+        <button id="bouton-ajouter">+ Ajouter un livre</button>
+        <div id="liste-cartes"></div>
     </section>
+
+    <section id="vue-form">
+        <h2 id="form-titre">Ajouter un livre</h2>
+        <form id="form-ajout">
+            <label for="titre">Titre *</label>
+            <input id="titre" type="text" maxlength="120" required>
+
+            <label for="auteur">Auteur / dessinateur</label>
+            <input id="auteur" type="text" maxlength="80">
+
+            <label for="categorie">Catégorie</label>
+            <select id="categorie"></select>
+
+            <label for="total">Nombre de tomes dans la série *</label>
+            <input id="total" type="number" min="1" max="999" required>
+
+            <div id="bloc-tomes">
+                <label for="tomes">Tomes que tu possèdes déjà</label>
+                <input id="tomes" type="text" maxlength="200" placeholder="1-10, 12">
+            </div>
+
+            <label for="tags">Tags (séparés par des virgules)</label>
+            <input id="tags" type="text" maxlength="300" placeholder="seinen, dark fantasy">
+
+            <p id="form-erreur" role="alert"></p>
+            <div class="form-actions">
+                <button type="submit" id="form-valider">Ajouter</button>
+                <button type="button" id="form-annuler">Annuler</button>
+            </div>
+        </form>
+    </section>
+
     <section id="vue-detail">
         <button id="bouton-retour">Retour</button>
         <div id="detail-contenu"></div>
-
     </section>
-    
+
     <script src="./js/script.js" defer></script>
 </body>
 </html>
