@@ -288,10 +288,15 @@ function dataUrlEnBlob(uri) {
 function choisirFichier(accept, quand) {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = accept;
+    if (accept) input.accept = accept;
+    // Le champ reste dans la page jusqu'au choix : sur mobile, un champ détaché peut être supprimé avant d'avoir répondu
+    input.style.display = "none";
     input.addEventListener("change", () => {
-        if (input.files && input.files[0]) quand(input.files[0]);
+        const fichier = input.files && input.files[0];
+        input.remove();
+        if (fichier) quand(fichier);
     });
+    document.body.append(input);
     input.click();
 }
 
@@ -842,7 +847,7 @@ champ("form-ajout").addEventListener("submit", (e) => {
 
 // ===== Boutons Exporter / Importer =====
 champ("bouton-exporter").addEventListener("click", exporter);
-champ("bouton-importer").addEventListener("click", () => choisirFichier("application/json,.json", importer));
+champ("bouton-importer").addEventListener("click", () => choisirFichier("", importer));
 
 // ===== Démarrage =====
 afficherListe();
