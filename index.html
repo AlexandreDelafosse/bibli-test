@@ -3,23 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; base-uri 'none'; form-action 'none'">
     <title>Ma bibliothèque</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
     <h1>Ma bibliothèque</h1>
+    <p id="message" role="status" hidden></p>
 
     <section id="vue-liste">
         <h2>Mes livres</h2>
-        <button id="bouton-ajouter">+ Ajouter un livre</button>
+
+        <div class="barre-actions">
+            <button type="button" id="bouton-ajouter">+ Ajouter un livre</button>
+            <button type="button" id="bouton-exporter">Exporter</button>
+            <button type="button" id="bouton-importer">Importer</button>
+        </div>
+
         <div id="filtres">
-    <input id="recherche" type="search" maxlength="100" placeholder="Rechercher un titre ou un auteur" aria-label="Rechercher">
-    <select id="filtre-categorie" aria-label="Catégorie"></select>
-    <div id="filtre-tags"></div>
-    <p id="compteur"></p>
-    <button type="button" id="filtre-reset">Réinitialiser les filtres</button>
-</div>
+            <input id="recherche" type="search" maxlength="100" placeholder="Rechercher un titre ou un auteur" aria-label="Rechercher">
+            <select id="filtre-categorie" aria-label="Catégorie"></select>
+            <div id="filtre-tags"></div>
+            <p id="compteur"></p>
+            <button type="button" id="filtre-reset">Réinitialiser les filtres</button>
+        </div>
+
         <div id="liste-cartes"></div>
     </section>
 
@@ -55,7 +63,7 @@
     </section>
 
     <section id="vue-detail">
-        <button id="bouton-retour">Retour</button>
+        <button type="button" id="bouton-retour">Retour</button>
         <div id="detail-contenu"></div>
     </section>
 
