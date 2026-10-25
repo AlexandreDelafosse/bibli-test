@@ -141,18 +141,95 @@ function creerCarte(livre) {
     return carte;
 }
 
+// ===== Filtres et recherche =====
+const filtres = { texte: "", categorie: "", tags: new Set() };
+
+function normaliser(s) {
+    return String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function livresFiltres() {
+    const q = normaliser(filtres.texte);
+    return bibliotheque.filter(l => {
+        if (filtres.categorie && l.Type !== filtres.categorie) return false;
+        if (q && !normaliser(l.Titre + " " + l.Auteur).includes(q)) return false;
+        const tagsDuLivre = l.Tags.map(normaliser);
+        for (const cle of filtres.tags) if (!tagsDuLivre.includes(cle)) return false;
+        return true;
+    });
+}
+
+function afficherFiltreTags() {
+    const zone = champ("filtre-tags");
+    zone.replaceChildren();
+
+    const dispo = new Map(); // clé normalisée -> libellé affiché
+    bibliotheque.forEach(l => l.Tags.forEach(t => {
+        if (!dispo.has(normaliser(t))) dispo.set(normaliser(t), t);
+    }));
+    for (const cle of [...filtres.tags]) if (!dispo.has(cle)) filtres.tags.delete(cle); // tag disparu
+
+    [...dispo].sort((a, b) => a[1].localeCompare(b[1], "fr")).forEach(([cle, libelle]) => {
+        const puce = document.createElement("button");
+        puce.type = "button";
+        puce.className = "chip" + (filtres.tags.has(cle) ? " actif" : "");
+        puce.textContent = libelle;
+        puce.addEventListener("click", () => {
+            if (filtres.tags.has(cle)) filtres.tags.delete(cle);
+            else filtres.tags.add(cle);
+            afficherListe();
+        });
+        zone.append(puce);
+    });
+}
+
 function afficherListe() {
+    afficherFiltreTags();
+
     const zone = champ("liste-cartes");
     zone.replaceChildren();
 
-    if (bibliotheque.length === 0) {
+    const resultats = livresFiltres();
+    const filtreActif = Boolean(filtres.texte || filtres.categorie || filtres.tags.size);
+    champ("compteur").textContent = bibliotheque.length ? `${resultats.length} / ${bibliotheque.length} livre(s)` : "";
+    champ("filtre-reset").style.display = filtreActif ? "inline-block" : "none";
+
+    if (resultats.length === 0) {
         const vide = document.createElement("p");
-        vide.textContent = "Aucun livre pour l'instant. Ajoute le premier avec le bouton ci-dessus.";
+        vide.textContent = bibliotheque.length === 0
+            ? "Aucun livre pour l'instant. Ajoute le premier avec le bouton ci-dessus."
+            : "Aucun résultat avec ces filtres.";
         zone.append(vide);
         return;
     }
-    bibliotheque.forEach(livre => zone.append(creerCarte(livre)));
+    resultats.forEach(livre => zone.append(creerCarte(livre)));
 }
+
+[["", "Toutes les catégories"], ...CATEGORIES.map(c => [c, c])].forEach(([valeur, texte]) => {
+    const option = document.createElement("option");
+    option.value = valeur;
+    option.textContent = texte;
+    champ("filtre-categorie").append(option);
+});
+
+champ("recherche").addEventListener("input", (e) => {
+    filtres.texte = nettoyerTexte(e.target.value, 100);
+    afficherListe();
+});
+
+champ("filtre-categorie").addEventListener("change", (e) => {
+    filtres.categorie = CATEGORIES.includes(e.target.value) ? e.target.value : "";
+    afficherListe();
+});
+
+champ("filtre-reset").addEventListener("click", () => {
+    filtres.texte = "";
+    filtres.categorie = "";
+    filtres.tags.clear();
+    champ("recherche").value = "";
+    champ("filtre-categorie").value = "";
+    afficherListe();
+});
 
 let modeClic = "possede"; // "possede" ou "note"
 

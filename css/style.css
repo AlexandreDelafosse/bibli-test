@@ -37,3 +37,10 @@
 .tome { position: relative; }
 .tome.avec-note::after { content: ""; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
 .notes { padding-left: 18px; font-size: 14px; }
+#filtres { display: flex; flex-direction: column; gap: 8px; max-width: 600px; margin-bottom: 16px; }
+#filtres input, #filtres select { padding: 6px; font-size: 16px; }
+#filtre-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { padding: 3px 10px; border: 1px solid #ccc; background: #fff; border-radius: 12px; cursor: pointer; font-size: 13px; }
+.chip.actif { background: #333; color: #fff; border-color: #333; }
+#compteur { margin: 0; font-size: 13px; color: #666; }
+#filtre-reset { display: none; align-self: flex-start; padding: 4px 10px; cursor: pointer; }

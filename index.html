@@ -13,6 +13,13 @@
     <section id="vue-liste">
         <h2>Mes livres</h2>
         <button id="bouton-ajouter">+ Ajouter un livre</button>
+        <div id="filtres">
+    <input id="recherche" type="search" maxlength="100" placeholder="Rechercher un titre ou un auteur" aria-label="Rechercher">
+    <select id="filtre-categorie" aria-label="Catégorie"></select>
+    <div id="filtre-tags"></div>
+    <p id="compteur"></p>
+    <button type="button" id="filtre-reset">Réinitialiser les filtres</button>
+</div>
         <div id="liste-cartes"></div>
     </section>
 
