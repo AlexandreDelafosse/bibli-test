@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
     <title>Ma bibliothèque</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
     <h1>Ma bibliothèque</h1>
+
+    <div id="barre-compte" hidden>
+        <span id="compte-statut">Non connecté</span>
+        <button type="button" id="compte-bouton">Se connecter</button>
+    </div>
+
     <p id="message" role="status" hidden></p>
 
     <section id="vue-liste">
@@ -67,6 +73,41 @@
         <div id="detail-contenu"></div>
     </section>
 
+    <section id="vue-compte">
+        <h2 id="compte-titre">Connexion</h2>
+        <form id="form-compte" novalidate>
+            <div id="bloc-email">
+                <label for="compte-email">Adresse e-mail</label>
+                <input id="compte-email" type="email" maxlength="254" autocomplete="email" autocapitalize="none" spellcheck="false">
+            </div>
+            <div id="bloc-pseudo" hidden>
+                <label for="compte-pseudo">Pseudo (visible par tes amis)</label>
+                <input id="compte-pseudo" type="text" maxlength="20" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="lettres, chiffres, _ (3 à 20)">
+            </div>
+            <div id="bloc-mdp">
+                <label for="compte-mdp">Mot de passe</label>
+                <input id="compte-mdp" type="password" maxlength="72" autocomplete="current-password">
+            </div>
+            <div id="bloc-mdp2" hidden>
+                <label for="compte-mdp2">Confirmer le mot de passe</label>
+                <input id="compte-mdp2" type="password" maxlength="72" autocomplete="new-password">
+                <small>10 caractères minimum.</small>
+            </div>
+            <p id="compte-erreur" role="alert"></p>
+            <div class="form-actions">
+                <button type="submit" id="compte-valider">Se connecter</button>
+                <button type="button" id="compte-annuler">Annuler</button>
+            </div>
+        </form>
+        <p class="compte-liens">
+            <button type="button" class="lien" id="compte-bascule">Créer un compte</button>
+            <button type="button" class="lien" id="compte-oubli">Mot de passe oublié ?</button>
+        </p>
+    </section>
+
+    <script src="./js/config.js" defer></script>
+    <script src="./js/vendor/supabase.js" defer></script>
     <script src="./js/script.js" defer></script>
+    <script src="./js/compte.js" defer></script>
 </body>
 </html>

@@ -403,7 +403,7 @@ async function importer(fichier) {
 
 // ===== Navigation entre les vues =====
 function montrerVue(nom) {
-    ["vue-liste", "vue-detail", "vue-form"].forEach(id => {
+    ["vue-liste", "vue-detail", "vue-form", "vue-compte"].forEach(id => {
         champ(id).style.display = id === nom ? "block" : "none";
     });
 }

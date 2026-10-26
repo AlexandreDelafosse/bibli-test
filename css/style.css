@@ -1,10 +1,22 @@
 /* ===== Base ===== */
-img[hidden] { display: none !important; }
+[hidden] { display: none !important; }
 button { cursor: pointer; }
 #message { background: #fff3cd; border: 1px solid #e0c36a; padding: 8px 12px; border-radius: 4px; max-width: 600px; }
 
 /* ===== Vues ===== */
-#vue-detail, #vue-form { display: none; max-width: 600px; }
+#vue-detail, #vue-form, #vue-compte { display: none; max-width: 600px; }
+
+/* ===== Compte ===== */
+#barre-compte { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px; }
+#barre-compte button { padding: 4px 10px; }
+#form-compte, #form-compte > div { display: flex; flex-direction: column; gap: 8px; }
+#form-compte > .form-actions { flex-direction: row; }
+#form-compte { margin-top: 10px; }
+#form-compte input { padding: 6px; font-size: 16px; }
+#form-compte small { color: #666; }
+#compte-erreur { color: #c0392b; min-height: 1em; margin: 0; }
+.compte-liens { display: flex; flex-wrap: wrap; gap: 16px; }
+button.lien { border: none; background: none; color: #1565c0; text-decoration: underline; padding: 0; font-size: 14px; }
 #vue-detail { border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
 .barre-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .barre-actions button { padding: 8px 14px; }
