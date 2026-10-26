@@ -9,6 +9,7 @@ button { cursor: pointer; }
 /* ===== Compte ===== */
 #barre-compte { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px; }
 #barre-compte button { padding: 4px 10px; }
+#sync-statut { color: #666; }
 #form-compte, #form-compte > div { display: flex; flex-direction: column; gap: 8px; }
 #form-compte > .form-actions { flex-direction: row; }
 #form-compte { margin-top: 10px; }

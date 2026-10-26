@@ -1,6 +1,9 @@
 // ===== Comptes (Supabase) : inscription, connexion, mot de passe oublié =====
 // Tout est affiché avec textContent (jamais innerHTML). La clé utilisée est la clé publique :
 // ce sont les règles de sécurité de la base qui protègent les données.
+// Partagé avec sync.js (chargé après) ; reste null si les comptes ne sont pas disponibles
+let clientSupabase = null;
+
 (function () {
     const barre = champ("barre-compte");
 
@@ -13,6 +16,7 @@
     const client = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_CLE_PUBLIQUE, {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
+    clientSupabase = client;
 
     const PSEUDO_VALIDE = /^[a-z0-9_]{3,20}$/;
     const EMAIL_VALIDE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -210,10 +214,12 @@
             ouvrirCompte("connexion");
             return;
         }
+        // envoie ce qui reste puis efface la copie privée de cet appareil (sync.js) ; l'utilisateur peut annuler
+        if (typeof preparerDeconnexion === "function" && !(await preparerDeconnexion())) return;
         // scope "local" : ne déconnecte que cet appareil, pas ton téléphone ou ton PC
         await client.auth.signOut({ scope: "local" });
         montrerVue("vue-liste");
-        message("Déconnecté. Ta collection reste enregistrée sur cet appareil.");
+        message("Déconnecté. Ta collection reste dans ton compte ; la copie de cet appareil a été effacée.");
     });
 
     // La fonction de rappel doit rester légère : le travail se fait après coup (recommandation de Supabase)

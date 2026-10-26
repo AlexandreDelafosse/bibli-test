@@ -125,12 +125,35 @@ function lireTomes(texte, total) {
     return { tomes: [...resultat].sort((a, b) => a - b) };
 }
 
+// ===== Portée des données =====
+// "" = collection locale de cet appareil (sans compte). Sinon : identifiant du compte connecté.
+// Chaque compte a sa propre copie locale : deux comptes sur le même appareil ne se mélangent jamais.
+const UUID_VALIDE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+// Au démarrage, on retrouve le compte déjà connecté pour afficher tout de suite sa copie locale (même hors ligne).
+// C'est seulement un choix d'affichage : rien n'est envoyé ni lu en ligne sans session valide.
+function porteeInitiale() {
+    try {
+        if (typeof CONFIG === "undefined") return "";
+        const ref = new URL(CONFIG.SUPABASE_URL).hostname.split(".")[0];
+        const session = JSON.parse(localStorage.getItem(`sb-${ref}-auth-token`) || "null");
+        const id = session && session.user && typeof session.user.id === "string" ? session.user.id.toLowerCase() : "";
+        return UUID_VALIDE.test(id) ? id : "";
+    } catch (e) {
+        return "";
+    }
+}
+
+let portee = porteeInitiale();
+const cleStockage = (p = portee) => (p ? `bibliotheque:${p}` : "bibliotheque");
+const nomBD = (p = portee) => (p ? `bibliotheque-images-${p}` : "bibliotheque-images");
+
 // ===== Stockage des données (localStorage) =====
-function charger() {
+function charger(p = portee) {
     let source = bibliothequeParDefaut;
     let lectureOk = false;
     try {
-        const sauvegarde = localStorage.getItem("bibliotheque");
+        const sauvegarde = localStorage.getItem(cleStockage(p));
         if (sauvegarde) {
             const donnees = JSON.parse(sauvegarde);
             if (Array.isArray(donnees)) { source = donnees; lectureOk = true; }
@@ -138,7 +161,7 @@ function charger() {
     } catch (e) {}
     const livres = fiabiliser(source.slice(0, LIMITES.livres).map(nettoyerLivre).filter(Boolean));
     // Réécrit les données nettoyées (purge les anciens champs supprimés)
-    if (lectureOk) { try { localStorage.setItem("bibliotheque", JSON.stringify(livres)); } catch (e) {} }
+    if (lectureOk) { try { localStorage.setItem(cleStockage(p), JSON.stringify(livres)); } catch (e) {} }
     return livres;
 }
 
@@ -146,30 +169,48 @@ let bibliotheque = charger();
 
 function sauvegarder() {
     try {
-        localStorage.setItem("bibliotheque", JSON.stringify(bibliotheque));
-        return true;
+        localStorage.setItem(cleStockage(), JSON.stringify(bibliotheque));
     } catch (e) {
         message("Sauvegarde impossible : l'espace de stockage du navigateur est plein ou bloqué.");
         return false;
     }
+    // Connecté : sync.js envoie ensuite les différences vers le compte
+    if (typeof planifierEnvoi === "function") planifierEnvoi();
+    return true;
 }
 
 // ===== Stockage des images (IndexedDB) =====
-let bdPromesse = null;
-function ouvrirBD() {
-    if (!bdPromesse) {
-        bdPromesse = new Promise((ok, ko) => {
-            const requete = indexedDB.open("bibliotheque-images", 1);
+// Une base par portée (nom différent pour chaque compte), ouverte à la demande.
+const basesOuvertes = new Map();
+function ouvrirBD(nom = nomBD()) {
+    if (!basesOuvertes.has(nom)) {
+        basesOuvertes.set(nom, new Promise((ok, ko) => {
+            const requete = indexedDB.open(nom, 1);
             requete.onupgradeneeded = () => requete.result.createObjectStore("images");
             requete.onsuccess = () => ok(requete.result);
-            requete.onerror = () => ko(requete.error);
-        });
+            requete.onerror = () => { basesOuvertes.delete(nom); ko(requete.error); };
+        }));
     }
-    return bdPromesse;
+    return basesOuvertes.get(nom);
 }
 
-async function operation(mode, fonction) {
-    const bd = await ouvrirBD();
+async function fermerBD(nom = nomBD()) {
+    const promesse = basesOuvertes.get(nom);
+    basesOuvertes.delete(nom);
+    if (!promesse) return;
+    try { (await promesse).close(); } catch (e) {}
+}
+
+async function supprimerBD(nom) {
+    await fermerBD(nom);
+    await new Promise((ok) => {
+        const requete = indexedDB.deleteDatabase(nom);
+        requete.onsuccess = requete.onerror = requete.onblocked = () => ok();
+    });
+}
+
+async function operation(mode, fonction, nom = nomBD()) {
+    const bd = await ouvrirBD(nom);
     return new Promise((ok, ko) => {
         const tx = bd.transaction("images", mode);
         const requete = fonction(tx.objectStore("images"));
@@ -179,11 +220,24 @@ async function operation(mode, fonction) {
     });
 }
 
-const imgPut = (id, blob) => operation("readwrite", s => s.put(blob, id));
-const imgGet = (id) => operation("readonly", s => s.get(id));
-const imgDelete = (id) => operation("readwrite", s => s.delete(id));
-const imgClear = () => operation("readwrite", s => s.clear());
-const imgCles = () => operation("readonly", s => s.getAllKeys());
+const imgPut = (id, blob, nom) => operation("readwrite", s => s.put(blob, id), nom);
+const imgGet = (id, nom) => operation("readonly", s => s.get(id), nom);
+const imgDelete = (id, nom) => operation("readwrite", s => s.delete(id), nom);
+const imgClear = (nom) => operation("readwrite", s => s.clear(), nom);
+const imgCles = (nom) => operation("readonly", s => s.getAllKeys(), nom);
+
+// Une image : d'abord la copie locale, sinon (compte connecté) téléchargement depuis le compte (sync.js)
+const telechargementsEnCours = new Map();
+async function blobImage(id) {
+    const local = await imgGet(id);
+    if (local) return local;
+    if (typeof telechargerImage !== "function") return null;
+    const cle = portee + "/" + id;
+    if (!telechargementsEnCours.has(cle)) {
+        telechargementsEnCours.set(cle, telechargerImage(id).catch(() => null).finally(() => telechargementsEnCours.delete(cle)));
+    }
+    return telechargementsEnCours.get(cle);
+}
 
 // Adresses temporaires (blob:) des images affichées, créées à la demande
 const urlsImages = new Map();
@@ -191,9 +245,11 @@ const urlsImages = new Map();
 async function urlImage(id) {
     if (!ID_VALIDE.test(id)) return null;
     if (urlsImages.has(id)) return urlsImages.get(id);
+    const porteeDemandee = portee;
     try {
-        const blob = await imgGet(id);
-        if (!blob) return null;
+        const blob = await blobImage(id);
+        if (!blob || porteeDemandee !== portee) return null; // le compte a changé entre-temps
+        if (urlsImages.has(id)) return urlsImages.get(id);
         const url = URL.createObjectURL(blob);
         urlsImages.set(id, url);
         return url;
@@ -322,7 +378,7 @@ async function exporter() {
     try {
         const images = Object.create(null);
         for (const id of idsImages(bibliotheque)) {
-            const blob = await imgGet(id);
+            const blob = await blobImage(id);
             if (blob) images[id] = await blobEnDataUrl(blob);
         }
         const contenu = JSON.stringify({
@@ -385,7 +441,7 @@ async function importer(fichier) {
             l.Tomes_possedes.forEach(t => { if (t.Image && !images.has(t.Image)) t.Image = ""; });
         });
 
-        const question = `Remplacer ta collection actuelle (${bibliotheque.length} livre(s)) par celle du fichier (${livres.length} livre(s), ${images.size} image(s)) ? Cette action est définitive.`;
+        const question = `Remplacer ta collection actuelle (${bibliotheque.length} livre(s)) par celle du fichier (${livres.length} livre(s), ${images.size} image(s)) ? Cette action est définitive` + (portee ? " et remplace aussi ta collection en ligne." : ".");
         if (!confirm(question)) return;
 
         await imgClear();
@@ -406,6 +462,20 @@ function montrerVue(nom) {
     ["vue-liste", "vue-detail", "vue-form", "vue-compte"].forEach(id => {
         champ(id).style.display = id === nom ? "block" : "none";
     });
+}
+
+// Passe d'une collection à l'autre (connexion, déconnexion) : recharge la copie locale correspondante
+async function changerPortee(nouvelle) {
+    if (nouvelle === portee) return;
+    viderUrls();
+    portee = nouvelle;
+    bibliotheque = charger();
+    livreEnEdition = null;
+    tomeActif = null;
+    afficherListe();
+    // une fiche ou un formulaire ouvert montrerait des données de l'autre collection
+    if (champ("vue-detail").style.display === "block" || champ("vue-form").style.display === "block") montrerVue("vue-liste");
+    await nettoyerOrphelines();
 }
 
 // ===== Éléments d'affichage (uniquement textContent, jamais innerHTML) =====
