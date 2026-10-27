@@ -83,7 +83,7 @@ button.lien { border: none; background: none; color: #1565c0; text-decoration: u
 
 /* ===== Page visiteur ===== */
 body.visiteur #v-liste, body.visiteur #v-detail { max-width: 600px; }
-#v-etat { max-width: 600px; }
+#v-etat { max-width: 650px; }
 #v-detail { border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
 .livre[role="button"]:focus-visible { outline: 3px solid #1565c0; }
 #v-maj.direct { color: #2e7d32; }
