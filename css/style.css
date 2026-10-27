@@ -4,7 +4,7 @@ button { cursor: pointer; }
 #message { background: #fff3cd; border: 1px solid #e0c36a; padding: 8px 12px; border-radius: 4px; max-width: 600px; }
 
 /* ===== Vues ===== */
-#vue-detail, #vue-form, #vue-compte { display: none; max-width: 600px; }
+#vue-detail, #vue-form, #vue-compte, #vue-partage { display: none; max-width: 600px; }
 
 /* ===== Compte ===== */
 #barre-compte { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px; }
@@ -73,3 +73,17 @@ button.lien { border: none; background: none; color: #1565c0; text-decoration: u
 /* ===== Panneau image d'un tome ===== */
 .panneau-image { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border: 1px solid #1565c0; border-radius: 4px; padding: 8px; margin: 10px 0; }
 .panneau-image strong { margin-right: 6px; }
+
+/* ===== Partage ===== */
+.badge-public { display: inline-block; background: #e3f2fd; color: #0d47a1; border-radius: 10px; padding: 1px 8px; margin: 2px 6px 2px 0; font-size: 12px; }
+#vue-partage input[type="text"] { width: 100%; box-sizing: border-box; padding: 6px; font-size: 16px; margin: 4px 0 8px; }
+#vue-partage label.case { display: flex; align-items: center; gap: 8px; margin: 10px 0; }
+#partage-erreur { color: #c0392b; min-height: 1em; }
+#partage-liste { padding-left: 18px; font-size: 14px; overflow-wrap: anywhere; }
+
+/* ===== Page visiteur ===== */
+body.visiteur #v-liste, body.visiteur #v-detail { max-width: 600px; }
+#v-etat { max-width: 600px; }
+#v-detail { border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
+.livre[role="button"]:focus-visible { outline: 3px solid #1565c0; }
+#v-maj.direct { color: #2e7d32; }

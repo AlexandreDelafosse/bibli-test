@@ -57,9 +57,11 @@
             if (propre && !tags.some(x => x.toLowerCase() === propre.toLowerCase()) && tags.length < LIMITES.tags) tags.push(propre);
         }
 
+        const type = CATEGORIES.includes(brut.type) ? brut.type : "Livre";
         return {
+            cle: idSur(brut.id) || `${type}|${titre}`, // retrouve la même série d'une mise à jour à l'autre
             titre,
-            type: CATEGORIES.includes(brut.type) ? brut.type : "Livre",
+            type,
             auteur: texteSur(brut.auteur, LIMITES.auteur),
             total,
             couverture: idSur(brut.couverture),
@@ -220,7 +222,11 @@
         return morceaux.join(", ");
     }
 
-    function afficherDetail(livre) {
+    let serieOuverte = ""; // clé de la série dont la fiche est affichée
+
+    function afficherDetail(livre, conserverPosition) {
+        serieOuverte = livre.cle;
+        const position = window.scrollY;
         const contenu = $("v-contenu");
         contenu.replaceChildren();
 
@@ -285,10 +291,11 @@
 
         $("v-liste").hidden = true;
         $("v-detail").hidden = false;
-        window.scrollTo(0, 0);
+        window.scrollTo(0, conserverPosition ? position : 0);
     }
 
     $("v-retour").addEventListener("click", () => {
+        serieOuverte = "";
         $("v-detail").hidden = true;
         $("v-liste").hidden = false;
     });
@@ -305,10 +312,33 @@
         afficherListe();
     });
 
-    // ----- Chargement -----
+    // ----- Chargement et mise à jour automatique -----
+    // Mise à jour EN DIRECT : la base envoie un signal (sans donnée) à chaque changement ; on recharge aussitôt.
+    // Contrôle de secours : une vérification très légère (quelques octets) de temps en temps, plus fréquente si le direct est coupé.
+    const DELAI_SECOURS = 60000;      // direct actif : simple filet de sécurité
+    const DELAI_SANS_DIRECT = 10000;  // direct indisponible : on vérifie plus souvent
+    const DELAI_ERREUR = 30000;
+    const DELAI_GROUPAGE = 150;       // plusieurs signaux rapprochés = une seule mise à jour
+    const INTERVALLE_MIN = 1000;      // jamais plus d'une vérification par seconde
+    let generation = 0;               // change à chaque nouveau lien : les anciennes vérifications s'arrêtent
+    let jetonCourant = "";
+    let derniereEmpreinte = null;
+    let minuteur = null;
+    let minuteurSignal = null;
+    let enVerification = false;
+    let dernierDebut = 0;
+    let canal = null;
+    let direct = false;
+    let contenuAffiche = false;
+    let derniereMaj = "";
+
     function reinitialiser() {
         livres = [];
         proprietaire = "";
+        serieOuverte = "";
+        contenuAffiche = false;
+        derniereMaj = "";
+        $("v-maj").hidden = true;
         fileAttente.length = 0;
         imagesEnCache.forEach(p => p.then(url => { if (url) URL.revokeObjectURL(url); }));
         imagesEnCache.clear();
@@ -318,30 +348,36 @@
         document.title = "Bibliothèque partagée";
     }
 
-    async function charger() {
-        reinitialiser();
-        const jeton = location.hash.replace(/^#/, "");
-        if (!JETON_VALIDE.test(jeton)) {
-            etat("Ce lien n'est pas valide ou a été désactivé.");
-            return;
-        }
-        etat("Chargement…");
-
-        let reponse;
+    // Petite empreinte (quelques octets) du contenu partagé : permet de savoir s'il a changé sans tout retélécharger.
+    // undefined = indisponible pour l'instant ; null = lien invalide ou désactivé.
+    async function lireEmpreinte(jeton) {
         try {
-            const { data, error } = await client.rpc("lire_partage", { p_jeton: jeton });
-            if (error) throw error;
-            reponse = data;
+            const { data, error } = await client.rpc("partage_empreinte", { p_jeton: jeton });
+            if (error) return undefined;
+            return typeof data === "string" ? data : null;
         } catch (e) {
-            etat("Impossible de charger cette bibliothèque pour l'instant. Réessaie dans un moment.");
-            return;
+            return undefined;
         }
-        if (!reponse || typeof reponse !== "object") {
-            etat("Ce lien n'est pas valide ou a été désactivé.");
-            return;
-        }
-        if (location.hash.replace(/^#/, "") !== jeton) return; // le lien a changé pendant le chargement
+    }
 
+    async function lireContenu(jeton) {
+        const { data, error } = await client.rpc("lire_partage", { p_jeton: jeton });
+        if (error) throw error;
+        return data && typeof data === "object" ? data : null;
+    }
+
+    function heure() {
+        return new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function afficherMode() {
+        const zone = $("v-maj");
+        zone.hidden = !contenuAffiche;
+        zone.textContent = (direct ? "● En direct" : "Mise à jour automatique toutes les 10 s") + (derniereMaj ? ` · mis à jour à ${derniereMaj}` : "");
+        zone.classList.toggle("direct", direct);
+    }
+
+    function appliquer(reponse, miseAJour) {
         proprietaire = UUID_VALIDE.test(String(reponse.proprietaire)) ? String(reponse.proprietaire) : "";
         notesVisibles = reponse.notes_visibles === true;
         const pseudo = PSEUDO_VALIDE.test(String(reponse.pseudo)) ? String(reponse.pseudo) : "";
@@ -356,10 +392,145 @@
 
         etat("");
         $("v-sous-titre").textContent = "Lecture seule : tu vois les séries que cette personne a choisi de partager.";
-        $("v-liste").hidden = false;
+        contenuAffiche = true;
+        if (miseAJour) derniereMaj = heure();
+        afficherMode();
+
+        // Les filtres et la position de lecture sont conservés
+        const ouverte = serieOuverte ? livres.find(l => l.cle === serieOuverte) : null;
         afficherListe();
+        if (ouverte) {
+            $("v-liste").hidden = true;
+            afficherDetail(ouverte, true);
+            return;
+        }
+        $("v-detail").hidden = true;
+        $("v-liste").hidden = false;
+        if (serieOuverte) {
+            serieOuverte = "";
+            const texteInfo = "Cette série n'est plus partagée.";
+            etat(texteInfo);
+            setTimeout(() => { if ($("v-etat").textContent === texteInfo) etat(""); }, 6000);
+        }
     }
 
+    function planifier(g, delai) {
+        clearTimeout(minuteur);
+        minuteur = setTimeout(() => verifier(g), delai || (direct ? DELAI_SECOURS : DELAI_SANS_DIRECT));
+    }
+
+    // Un signal est arrivé : on vérifie dans un instant (groupé, et jamais plus d'une fois par seconde)
+    function demanderVerification(g) {
+        clearTimeout(minuteurSignal);
+        const attente = Math.max(DELAI_GROUPAGE, INTERVALLE_MIN - (Date.now() - dernierDebut));
+        minuteurSignal = setTimeout(() => verifier(g), attente);
+    }
+
+    function fermerDirect() {
+        clearTimeout(minuteurSignal);
+        direct = false;
+        if (canal) {
+            const ancien = canal;
+            canal = null;
+            try { Promise.resolve(client.removeChannel(ancien)).catch(() => {}); } catch (e) { /* déjà fermé */ }
+        }
+    }
+
+    function ouvrirDirect(g, jeton) {
+        fermerDirect();
+        try {
+            canal = client.channel(`partage:${jeton}`)
+                .on("broadcast", { event: "maj" }, () => { if (g === generation) demanderVerification(g); })
+                .subscribe((statut) => {
+                    if (g !== generation) return;
+                    const marche = statut === "SUBSCRIBED";
+                    if (marche === direct) return;
+                    direct = marche;
+                    afficherMode();
+                    if (marche) demanderVerification(g); // rattrape ce qui a pu arriver avant la connexion
+                    planifier(g);
+                });
+        } catch (e) {
+            direct = false; // pas de direct : la vérification régulière prend le relais
+        }
+    }
+
+    async function verifier(g) {
+        if (g !== generation || document.hidden) return; // en veille : reprise au retour sur l'onglet
+        if (enVerification) { planifier(g, 1000); return; }
+        enVerification = true;
+        dernierDebut = Date.now();
+        try {
+            const empreinte = await lireEmpreinte(jetonCourant);
+            if (g !== generation) return;
+            if (empreinte === undefined) { planifier(g, DELAI_ERREUR); return; }
+            if (empreinte === derniereEmpreinte) { planifier(g); return; }
+
+            if (empreinte === null) { // le lien vient d'être désactivé ou remplacé
+                derniereEmpreinte = null;
+                reinitialiser();
+                etat("Ce lien n'est pas valide ou a été désactivé.");
+                planifier(g, DELAI_ERREUR); // si le lien est réactivé, la page se remplit toute seule
+                return;
+            }
+
+            let reponse;
+            try {
+                reponse = await lireContenu(jetonCourant);
+            } catch (e) {
+                if (g === generation) planifier(g, DELAI_ERREUR);
+                return;
+            }
+            if (g !== generation) return;
+            if (!reponse) { planifier(g, DELAI_ERREUR); return; }
+            derniereEmpreinte = empreinte;
+            appliquer(reponse, true);
+            planifier(g);
+        } finally {
+            enVerification = false;
+        }
+    }
+
+    async function charger() {
+        const g = ++generation;
+        clearTimeout(minuteur);
+        fermerDirect();
+        derniereEmpreinte = null;
+        jetonCourant = "";
+        reinitialiser();
+        const jeton = location.hash.replace(/^#/, "");
+        if (!JETON_VALIDE.test(jeton)) {
+            etat("Ce lien n'est pas valide ou a été désactivé.");
+            return;
+        }
+        etat("Chargement…");
+
+        // L'empreinte est lue AVANT le contenu : si quelque chose change entre les deux, la vérification suivante le verra
+        const empreinte = await lireEmpreinte(jeton);
+        let reponse;
+        try {
+            reponse = await lireContenu(jeton);
+        } catch (e) {
+            if (g === generation) etat("Impossible de charger cette bibliothèque pour l'instant. Réessaie dans un moment.");
+            return;
+        }
+        if (g !== generation) return; // le lien a changé pendant le chargement
+        if (!reponse) {
+            etat("Ce lien n'est pas valide ou a été désactivé.");
+            return;
+        }
+
+        jetonCourant = jeton;
+        derniereEmpreinte = typeof empreinte === "string" ? empreinte : null;
+        appliquer(reponse, false);
+        planifier(g);
+        ouvrirDirect(g, jeton);
+    }
+
+    window.addEventListener("pagehide", fermerDirect);
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && jetonCourant) verifier(generation);
+    });
     window.addEventListener("hashchange", charger);
     charger();
 })();

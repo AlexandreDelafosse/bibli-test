@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co wss://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
     <meta name="referrer" content="no-referrer">
     <meta name="robots" content="noindex, nofollow">
     <title>Bibliothèque partagée</title>
-    <link rel="stylesheet" href="./css/style.css?v=4">
+    <link rel="stylesheet" href="./css/style.css?v=5">
 </head>
 <body class="visiteur">
     <h1 id="v-titre">Bibliothèque partagée</h1>
     <p id="v-etat" role="status">Chargement…</p>
+    <p id="v-maj" class="legende" hidden></p>
 
     <section id="v-liste" hidden>
         <p id="v-sous-titre"></p>
@@ -28,10 +29,10 @@
         <div id="v-contenu"></div>
     </section>
 
-    <p id="version">Version 4</p>
+    <p id="version">Version 5</p>
 
-    <script src="./js/config.js?v=4" defer></script>
-    <script src="./js/vendor/supabase.js?v=4" defer></script>
-    <script src="./js/partage.js?v=4" defer></script>
+    <script src="./js/config.js?v=5" defer></script>
+    <script src="./js/vendor/supabase.js?v=5" defer></script>
+    <script src="./js/partage.js?v=5" defer></script>
 </body>
 </html>
