@@ -68,7 +68,8 @@ function nettoyerLivre(brut) {
         Total_tomes: total,
         Couverture: nettoyerId(brut.Couverture),
         Tomes_possedes: tomes,
-        Tags: tags
+        Tags: tags,
+        Visibilite: brut.Visibilite === "public" ? "public" : "prive"
     };
 }
 
@@ -459,7 +460,7 @@ async function importer(fichier) {
 
 // ===== Navigation entre les vues =====
 function montrerVue(nom) {
-    ["vue-liste", "vue-detail", "vue-form", "vue-compte"].forEach(id => {
+    ["vue-liste", "vue-detail", "vue-form", "vue-compte", "vue-partage"].forEach(id => {
         champ(id).style.display = id === nom ? "block" : "none";
     });
 }
@@ -474,7 +475,7 @@ async function changerPortee(nouvelle) {
     tomeActif = null;
     afficherListe();
     // une fiche ou un formulaire ouvert montrerait des données de l'autre collection
-    if (champ("vue-detail").style.display === "block" || champ("vue-form").style.display === "block") montrerVue("vue-liste");
+    if (["vue-detail", "vue-form", "vue-partage"].some(id => champ(id).style.display === "block")) montrerVue("vue-liste");
     await nettoyerOrphelines();
 }
 
@@ -534,6 +535,12 @@ function creerCarte(livre) {
     progression.textContent = `${livre.Tomes_possedes.length} / ${livre.Total_tomes} tomes`;
 
     texte.append(titre, info, progression);
+    if (portee && livre.Visibilite === "public") {
+        const badge = document.createElement("span");
+        badge.className = "badge-public";
+        badge.textContent = "Public";
+        texte.append(badge);
+    }
     if (livre.Tags.length) texte.append(creerTags(livre.Tags));
     carte.append(texte);
 
@@ -650,6 +657,14 @@ function afficherDetail(livre) {
     const info = document.createElement("p");
     info.textContent = livre.Type + (livre.Auteur ? " · " + livre.Auteur : "");
     identite.append(h2, info);
+    if (portee) {
+        const visibilite = document.createElement("p");
+        visibilite.className = "legende";
+        visibilite.textContent = livre.Visibilite === "public"
+            ? "Série publique : visible par les personnes qui ont ton lien de partage."
+            : "Série privée : visible par toi seul.";
+        identite.append(visibilite);
+    }
     if (livre.Tags.length) identite.append(creerTags(livre.Tags));
     entete.append(identite);
 
@@ -675,6 +690,13 @@ function afficherDetail(livre) {
             }, livre));
         })
     );
+    if (portee) {
+        actions.append(creerBouton(livre.Visibilite === "public" ? "Rendre privée" : "Rendre publique", () => {
+            livre.Visibilite = livre.Visibilite === "public" ? "prive" : "public";
+            sauvegarder();
+            afficherDetail(livre);
+        }));
+    }
     if (livre.Couverture) {
         actions.append(creerBouton("Retirer la couverture", async () => {
             const ancien = livre.Couverture;
@@ -893,7 +915,8 @@ champ("form-ajout").addEventListener("submit", (e) => {
         Total_tomes: total,
         Couverture: livreEnEdition ? livreEnEdition.Couverture : "",
         Tomes_possedes: tomesPossedes,
-        Tags: tags
+        Tags: tags,
+        Visibilite: livreEnEdition ? livreEnEdition.Visibilite : "prive"
     });
     if (!livre) return echec("Titre manquant ou données invalides.");
 

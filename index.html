@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
     <title>Ma bibliothèque</title>
-    <link rel="stylesheet" href="./css/style.css?v=3">
+    <link rel="stylesheet" href="./css/style.css?v=4">
 </head>
 <body>
     <h1>Ma bibliothèque</h1>
@@ -15,6 +15,7 @@
         <button type="button" id="compte-bouton">Se connecter</button>
         <span id="sync-statut" hidden></span>
         <button type="button" id="sync-bouton" hidden>Actualiser</button>
+        <button type="button" id="partage-bouton" hidden>Partager</button>
     </div>
 
     <p id="message" role="status" hidden></p>
@@ -107,12 +108,47 @@
         </p>
     </section>
 
-    <p id="version">Version 3</p>
+    <section id="vue-partage">
+        <button type="button" id="partage-retour">Retour</button>
+        <h2>Partager ma bibliothèque</h2>
+        <p id="partage-resume"></p>
 
-    <script src="./js/config.js?v=3" defer></script>
-    <script src="./js/vendor/supabase.js?v=3" defer></script>
-    <script src="./js/script.js?v=3" defer></script>
-    <script src="./js/compte.js?v=3" defer></script>
-    <script src="./js/sync.js?v=3" defer></script>
+        <div id="partage-inactif" hidden>
+            <p>Le lien de partage est désactivé : personne ne peut voir ta bibliothèque.</p>
+            <button type="button" id="partage-activer">Activer le lien de partage</button>
+        </div>
+
+        <div id="partage-actif" hidden>
+            <label for="partage-lien">Lien à envoyer</label>
+            <input id="partage-lien" type="text" readonly>
+            <div class="actions-livre">
+                <button type="button" id="partage-copier">Copier le lien</button>
+                <button type="button" id="partage-envoyer" hidden>Envoyer…</button>
+            </div>
+            <label class="case"><input type="checkbox" id="partage-notes"> Montrer mes notes de tomes aux visiteurs</label>
+            <p class="legende">Seules les séries rendues publiques sont visibles. Toute personne qui a ce lien peut les voir.</p>
+            <div class="actions-livre">
+                <button type="button" id="partage-regenerer">Créer un nouveau lien</button>
+                <button type="button" id="partage-desactiver">Désactiver le lien</button>
+            </div>
+        </div>
+
+        <h3>Visibilité de mes séries</h3>
+        <div class="actions-livre">
+            <button type="button" id="partage-tout-public">Tout rendre public</button>
+            <button type="button" id="partage-tout-prive">Tout rendre privé</button>
+        </div>
+        <ul id="partage-liste"></ul>
+        <p id="partage-erreur" role="alert"></p>
+    </section>
+
+    <p id="version">Version 4</p>
+
+    <script src="./js/config.js?v=4" defer></script>
+    <script src="./js/vendor/supabase.js?v=4" defer></script>
+    <script src="./js/script.js?v=4" defer></script>
+    <script src="./js/compte.js?v=4" defer></script>
+    <script src="./js/sync.js?v=4" defer></script>
+    <script src="./js/partager.js?v=4" defer></script>
 </body>
 </html>

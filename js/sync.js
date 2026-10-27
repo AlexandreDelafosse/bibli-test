@@ -44,19 +44,19 @@
 
     function empreinte(l) {
         const tomes = [...l.Tomes_possedes].sort((a, b) => a.Tome - b.Tome).map(t => [t.Tome, t.Note, t.Image]);
-        return hacher(JSON.stringify([l.Id, l.Type, l.Titre, l.Auteur, l.Total_tomes, l.Couverture, tomes, l.Tags]));
+        return hacher(JSON.stringify([l.Id, l.Type, l.Titre, l.Auteur, l.Total_tomes, l.Couverture, tomes, l.Tags, l.Visibilite]));
     }
 
     const versCloud = (l) => ({
         id: l.Id, type: l.Type, titre: l.Titre, auteur: l.Auteur, total_tomes: l.Total_tomes,
-        couverture: l.Couverture, tags: l.Tags,
+        couverture: l.Couverture, tags: l.Tags, visibilite: l.Visibilite,
         tomes: l.Tomes_possedes.map(t => ({ numero: t.Tome, note: t.Note, image: t.Image }))
     });
 
     // Tout ce qui revient du serveur repasse par la même validation que la saisie
     const depuisCloud = (ligne, tomes) => nettoyerLivre({
         Id: ligne.id, Type: ligne.type, Titre: ligne.titre, Auteur: ligne.auteur, Total_tomes: ligne.total_tomes,
-        Couverture: ligne.couverture || "", Tags: ligne.tags || [],
+        Couverture: ligne.couverture || "", Tags: ligne.tags || [], Visibilite: ligne.visibilite,
         Tomes_possedes: (tomes || []).map(t => ({ Tome: t.numero, Note: t.note || "", Image: t.image || "" }))
     });
 
@@ -116,6 +116,7 @@
         zone.textContent = texte || "";
         zone.hidden = !portee || !texte;
         champ("sync-bouton").hidden = !portee;
+        champ("partage-bouton").hidden = !portee;
     }
 
     function statutEchec() {
@@ -235,7 +236,7 @@
         const modifsAvant = compteurModifs;
 
         const lignes = await toutLire((a, b) => client.from("livres")
-            .select("id,type,titre,auteur,total_tomes,couverture,tags").order("created_at").order("id").range(a, b));
+            .select("id,type,titre,auteur,total_tomes,couverture,tags,visibilite").order("created_at").order("id").range(a, b));
         const lignesTomes = await toutLire((a, b) => client.from("tomes")
             .select("livre_id,numero,note,image").order("livre_id").order("numero").range(a, b));
         // si le compte a changé, ou si tu as modifié quelque chose pendant la lecture, on laisse le prochain tour s'en charger

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Bibliothèque partagée</title>
+    <link rel="stylesheet" href="./css/style.css?v=4">
+</head>
+<body class="visiteur">
+    <h1 id="v-titre">Bibliothèque partagée</h1>
+    <p id="v-etat" role="status">Chargement…</p>
+
+    <section id="v-liste" hidden>
+        <p id="v-sous-titre"></p>
+        <div id="filtres">
+            <input id="v-recherche" type="search" maxlength="100" placeholder="Rechercher un titre ou un auteur" aria-label="Rechercher">
+            <select id="v-categorie" aria-label="Catégorie"></select>
+            <p id="compteur"></p>
+        </div>
+        <div id="v-cartes"></div>
+    </section>
+
+    <section id="v-detail" hidden>
+        <button type="button" id="v-retour">Retour</button>
+        <div id="v-contenu"></div>
+    </section>
+
+    <p id="version">Version 4</p>
+
+    <script src="./js/config.js?v=4" defer></script>
+    <script src="./js/vendor/supabase.js?v=4" defer></script>
+    <script src="./js/partage.js?v=4" defer></script>
+</body>
+</html>
