@@ -1,10 +1,29 @@
-// ===== Page visiteur : bibliothèque partagée par lien (lecture seule, sans compte) =====
-// Le jeton est lu dans la partie « # » de l'adresse (elle n'est jamais envoyée au serveur du site).
+// ===== Pages en lecture seule : bibliothèque partagée par lien (partage.html, sans compte)
+// ===== ou bibliothèque d'un ami (ami.html, connecté) =====
+// Le jeton (ou le pseudo de l'ami) est lu dans la partie « # » de l'adresse (elle n'est jamais envoyée au serveur du site).
 // Tout ce qui arrive du réseau est reconstruit champ par champ avant affichage, et affiché avec textContent.
 (function () {
     const $ = (id) => document.getElementById(id);
+    const MODE_AMI = document.body.dataset.mode === "ami";
+
+    const TEXTES = MODE_AMI ? {
+        titre: "Bibliothèque d'un ami",
+        invalide: "Cette bibliothèque n'est pas accessible : vérifie le pseudo, et que cette personne a bien accepté votre amitié.",
+        connexion: "Connecte-toi à ton compte (dans Ma bibliothèque) pour voir la bibliothèque d'un ami.",
+        sousTitre: "Lecture seule : tu vois les séries que cet ami a rendues publiques.",
+        vide: "Cet ami n'a rendu aucune série publique pour l'instant.",
+        absente: "Cette série n'est plus publique."
+    } : {
+        titre: "Bibliothèque partagée",
+        invalide: "Ce lien n'est pas valide ou a été désactivé.",
+        connexion: "",
+        sousTitre: "Lecture seule : tu vois les séries que cette personne a choisi de partager.",
+        vide: "Aucune série n'est partagée pour l'instant.",
+        absente: "Cette série n'est plus partagée."
+    };
 
     const JETON_VALIDE = /^[a-f0-9]{64}$/;
+    const CANAL_VALIDE = /^[a-f0-9]{64}$/;
     const UUID_VALIDE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const ID_VALIDE = /^[\w-]{1,64}$/;
     const PSEUDO_VALIDE = /^[a-z0-9_]{3,20}$/;
@@ -28,10 +47,23 @@
         return;
     }
 
-    // Pas de session, rien n'est mémorisé : un visiteur reste un visiteur, même s'il est connecté ailleurs sur ce navigateur
+    // Page de lien : pas de session, rien n'est mémorisé (un visiteur reste un visiteur, même s'il est connecté ailleurs).
+    // Page d'ami : on reprend la session de ce navigateur, pour que la base reconnaisse l'ami.
     const client = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_CLE_PUBLIQUE, {
-        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+        auth: MODE_AMI
+            ? { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+            : { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
     });
+
+    async function avoirSession() {
+        if (!MODE_AMI) return true;
+        try {
+            const { data } = await client.auth.getSession();
+            return Boolean(data && data.session);
+        } catch (e) {
+            return false;
+        }
+    }
 
     // ----- Nettoyage des données reçues -----
     function nettoyerLivre(brut, notesVisibles) {
@@ -196,7 +228,7 @@
         $("compteur").textContent = livres.length ? `${resultats.length} / ${livres.length} série(s)` : "";
         if (!resultats.length) {
             const vide = document.createElement("p");
-            vide.textContent = livres.length ? "Aucun résultat avec ces filtres." : "Aucune série n'est partagée pour l'instant.";
+            vide.textContent = livres.length ? "Aucun résultat avec ces filtres." : TEXTES.vide;
             zone.append(vide);
             return;
         }
@@ -321,13 +353,14 @@
     const DELAI_GROUPAGE = 150;       // plusieurs signaux rapprochés = une seule mise à jour
     const INTERVALLE_MIN = 1000;      // jamais plus d'une vérification par seconde
     let generation = 0;               // change à chaque nouveau lien : les anciennes vérifications s'arrêtent
-    let jetonCourant = "";
+    let cibleCourante = "";           // jeton du lien, ou pseudo de l'ami
     let derniereEmpreinte = null;
     let minuteur = null;
     let minuteurSignal = null;
     let enVerification = false;
     let dernierDebut = 0;
     let canal = null;
+    let sujetCanal = "";
     let direct = false;
     let contenuAffiche = false;
     let derniereMaj = "";
@@ -344,15 +377,21 @@
         imagesEnCache.clear();
         $("v-liste").hidden = true;
         $("v-detail").hidden = true;
-        $("v-titre").textContent = "Bibliothèque partagée";
-        document.title = "Bibliothèque partagée";
+        // on ne garde rien à l'écran (même caché) quand l'accès est perdu
+        $("v-cartes").replaceChildren();
+        $("v-contenu").replaceChildren();
+        $("compteur").textContent = "";
+        $("v-titre").textContent = TEXTES.titre;
+        document.title = TEXTES.titre;
     }
 
     // Petite empreinte (quelques octets) du contenu partagé : permet de savoir s'il a changé sans tout retélécharger.
     // undefined = indisponible pour l'instant ; null = lien invalide ou désactivé.
-    async function lireEmpreinte(jeton) {
+    async function lireEmpreinte(cible) {
         try {
-            const { data, error } = await client.rpc("partage_empreinte", { p_jeton: jeton });
+            const { data, error } = MODE_AMI
+                ? await client.rpc("ami_empreinte", { p_pseudo: cible })
+                : await client.rpc("partage_empreinte", { p_jeton: cible });
             if (error) return undefined;
             return typeof data === "string" ? data : null;
         } catch (e) {
@@ -360,8 +399,10 @@
         }
     }
 
-    async function lireContenu(jeton) {
-        const { data, error } = await client.rpc("lire_partage", { p_jeton: jeton });
+    async function lireContenu(cible) {
+        const { data, error } = MODE_AMI
+            ? await client.rpc("ami_bibliotheque", { p_pseudo: cible })
+            : await client.rpc("lire_partage", { p_jeton: cible });
         if (error) throw error;
         return data && typeof data === "object" ? data : null;
     }
@@ -381,7 +422,7 @@
         proprietaire = UUID_VALIDE.test(String(reponse.proprietaire)) ? String(reponse.proprietaire) : "";
         notesVisibles = reponse.notes_visibles === true;
         const pseudo = PSEUDO_VALIDE.test(String(reponse.pseudo)) ? String(reponse.pseudo) : "";
-        const nom = pseudo ? `Bibliothèque de ${pseudo}` : "Bibliothèque partagée";
+        const nom = pseudo ? `Bibliothèque de ${pseudo}` : TEXTES.titre;
         $("v-titre").textContent = nom;
         document.title = nom;
 
@@ -391,7 +432,7 @@
             .filter(Boolean);
 
         etat("");
-        $("v-sous-titre").textContent = "Lecture seule : tu vois les séries que cette personne a choisi de partager.";
+        $("v-sous-titre").textContent = TEXTES.sousTitre;
         contenuAffiche = true;
         if (miseAJour) derniereMaj = heure();
         afficherMode();
@@ -408,7 +449,7 @@
         $("v-liste").hidden = false;
         if (serieOuverte) {
             serieOuverte = "";
-            const texteInfo = "Cette série n'est plus partagée.";
+            const texteInfo = TEXTES.absente;
             etat(texteInfo);
             setTimeout(() => { if ($("v-etat").textContent === texteInfo) etat(""); }, 6000);
         }
@@ -429,6 +470,7 @@
     function fermerDirect() {
         clearTimeout(minuteurSignal);
         direct = false;
+        sujetCanal = "";
         if (canal) {
             const ancien = canal;
             canal = null;
@@ -436,13 +478,14 @@
         }
     }
 
-    function ouvrirDirect(g, jeton) {
+    function ouvrirDirect(g, sujet) {
         fermerDirect();
+        sujetCanal = sujet;
         try {
-            canal = client.channel(`partage:${jeton}`)
+            canal = client.channel(sujet)
                 .on("broadcast", { event: "maj" }, () => { if (g === generation) demanderVerification(g); })
                 .subscribe((statut) => {
-                    if (g !== generation) return;
+                    if (g !== generation || sujet !== sujetCanal) return;
                     const marche = statut === "SUBSCRIBED";
                     if (marche === direct) return;
                     direct = marche;
@@ -455,28 +498,46 @@
         }
     }
 
+    // Lien : toujours le même canal. Ami : le canal secret est renouvelé quand une amitié se termine, il arrive avec le contenu.
+    function assurerDirect(g, reponse) {
+        const sujet = MODE_AMI
+            ? (CANAL_VALIDE.test(String(reponse.canal)) ? `ami:${reponse.canal}` : "")
+            : `partage:${cibleCourante}`;
+        if (!sujet) { fermerDirect(); return; }
+        if (sujet !== sujetCanal) ouvrirDirect(g, sujet);
+    }
+
     async function verifier(g) {
         if (g !== generation || document.hidden) return; // en veille : reprise au retour sur l'onglet
         if (enVerification) { planifier(g, 1000); return; }
         enVerification = true;
         dernierDebut = Date.now();
         try {
-            const empreinte = await lireEmpreinte(jetonCourant);
+            const empreinte = await lireEmpreinte(cibleCourante);
             if (g !== generation) return;
-            if (empreinte === undefined) { planifier(g, DELAI_ERREUR); return; }
+            if (empreinte === undefined) {
+                if (!(await avoirSession())) { // déconnecté entre-temps
+                    if (g !== generation) return;
+                    derniereEmpreinte = null;
+                    reinitialiser();
+                    etat(TEXTES.connexion);
+                }
+                planifier(g, DELAI_ERREUR);
+                return;
+            }
             if (empreinte === derniereEmpreinte) { planifier(g); return; }
 
-            if (empreinte === null) { // le lien vient d'être désactivé ou remplacé
+            if (empreinte === null) { // le lien vient d'être désactivé ou remplacé (ou l'amitié a pris fin)
                 derniereEmpreinte = null;
                 reinitialiser();
-                etat("Ce lien n'est pas valide ou a été désactivé.");
-                planifier(g, DELAI_ERREUR); // si le lien est réactivé, la page se remplit toute seule
+                etat(TEXTES.invalide);
+                planifier(g, DELAI_ERREUR); // si l'accès revient, la page se remplit toute seule
                 return;
             }
 
             let reponse;
             try {
-                reponse = await lireContenu(jetonCourant);
+                reponse = await lireContenu(cibleCourante);
             } catch (e) {
                 if (g === generation) planifier(g, DELAI_ERREUR);
                 return;
@@ -485,6 +546,7 @@
             if (!reponse) { planifier(g, DELAI_ERREUR); return; }
             derniereEmpreinte = empreinte;
             appliquer(reponse, true);
+            assurerDirect(g, reponse);
             planifier(g);
         } finally {
             enVerification = false;
@@ -496,41 +558,53 @@
         clearTimeout(minuteur);
         fermerDirect();
         derniereEmpreinte = null;
-        jetonCourant = "";
+        cibleCourante = "";
         reinitialiser();
-        const jeton = location.hash.replace(/^#/, "");
-        if (!JETON_VALIDE.test(jeton)) {
-            etat("Ce lien n'est pas valide ou a été désactivé.");
+        const brut = location.hash.replace(/^#/, "");
+        const cible = MODE_AMI ? brut.toLowerCase() : brut;
+        if (!(MODE_AMI ? PSEUDO_VALIDE : JETON_VALIDE).test(cible)) {
+            etat(TEXTES.invalide);
             return;
         }
         etat("Chargement…");
+        if (!(await avoirSession())) {
+            if (g === generation) etat(TEXTES.connexion);
+            return;
+        }
+        if (g !== generation) return;
 
         // L'empreinte est lue AVANT le contenu : si quelque chose change entre les deux, la vérification suivante le verra
-        const empreinte = await lireEmpreinte(jeton);
+        const empreinte = await lireEmpreinte(cible);
         let reponse;
         try {
-            reponse = await lireContenu(jeton);
+            reponse = await lireContenu(cible);
         } catch (e) {
             if (g === generation) etat("Impossible de charger cette bibliothèque pour l'instant. Réessaie dans un moment.");
             return;
         }
-        if (g !== generation) return; // le lien a changé pendant le chargement
+        if (g !== generation) return; // l'adresse a changé pendant le chargement
         if (!reponse) {
-            etat("Ce lien n'est pas valide ou a été désactivé.");
+            etat(TEXTES.invalide);
             return;
         }
 
-        jetonCourant = jeton;
+        cibleCourante = cible;
         derniereEmpreinte = typeof empreinte === "string" ? empreinte : null;
         appliquer(reponse, false);
         planifier(g);
-        ouvrirDirect(g, jeton);
+        assurerDirect(g, reponse);
     }
 
     window.addEventListener("pagehide", fermerDirect);
     document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && jetonCourant) verifier(generation);
+        if (!document.hidden && cibleCourante) verifier(generation);
     });
     window.addEventListener("hashchange", charger);
+    if (MODE_AMI) {
+        // déconnexion depuis un autre onglet : on n'affiche plus rien de l'ami
+        client.auth.onAuthStateChange((evenement) => {
+            if (evenement === "SIGNED_OUT") setTimeout(charger, 0);
+        });
+    }
     charger();
 })();

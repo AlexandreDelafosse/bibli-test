@@ -460,7 +460,7 @@ async function importer(fichier) {
 
 // ===== Navigation entre les vues =====
 function montrerVue(nom) {
-    ["vue-liste", "vue-detail", "vue-form", "vue-compte", "vue-partage"].forEach(id => {
+    ["vue-liste", "vue-detail", "vue-form", "vue-compte", "vue-partage", "vue-amis"].forEach(id => {
         champ(id).style.display = id === nom ? "block" : "none";
     });
 }
@@ -475,7 +475,7 @@ async function changerPortee(nouvelle) {
     tomeActif = null;
     afficherListe();
     // une fiche ou un formulaire ouvert montrerait des données de l'autre collection
-    if (["vue-detail", "vue-form", "vue-partage"].some(id => champ(id).style.display === "block")) montrerVue("vue-liste");
+    if (["vue-detail", "vue-form", "vue-partage", "vue-amis"].some(id => champ(id).style.display === "block")) montrerVue("vue-liste");
     await nettoyerOrphelines();
 }
 
@@ -661,7 +661,7 @@ function afficherDetail(livre) {
         const visibilite = document.createElement("p");
         visibilite.className = "legende";
         visibilite.textContent = livre.Visibilite === "public"
-            ? "Série publique : visible par les personnes qui ont ton lien de partage."
+            ? "Série publique : visible par tes amis et par les personnes qui ont ton lien de partage (s'il est actif)."
             : "Série privée : visible par toi seul.";
         identite.append(visibilite);
     }

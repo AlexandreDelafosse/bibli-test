@@ -4,7 +4,7 @@ button { cursor: pointer; }
 #message { background: #fff3cd; border: 1px solid #e0c36a; padding: 8px 12px; border-radius: 4px; max-width: 600px; }
 
 /* ===== Vues ===== */
-#vue-detail, #vue-form, #vue-compte, #vue-partage { display: none; max-width: 600px; }
+#vue-detail, #vue-form, #vue-compte, #vue-partage, #vue-amis { display: none; max-width: 600px; }
 
 /* ===== Compte ===== */
 #barre-compte { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px; }
@@ -83,7 +83,20 @@ button.lien { border: none; background: none; color: #1565c0; text-decoration: u
 
 /* ===== Page visiteur ===== */
 body.visiteur #v-liste, body.visiteur #v-detail { max-width: 600px; }
-#v-etat { max-width: 650px; }
+#v-etat { max-width: 600px; }
 #v-detail { border: 1px solid #ccc; padding: 10px; margin-top: 20px; }
 .livre[role="button"]:focus-visible { outline: 3px solid #1565c0; }
 #v-maj.direct { color: #2e7d32; }
+
+/* ===== Amis ===== */
+#amis-form input[type="text"] { width: 100%; box-sizing: border-box; padding: 6px; font-size: 16px; margin: 4px 0 8px; }
+#amis-info, #amis-erreur { margin: 6px 0; min-height: 1.2em; }
+#amis-info { color: #2e7d32; }
+#amis-erreur { color: #c0392b; }
+#amis-direct.direct { color: #2e7d32; }
+.liste-amis { list-style: none; padding: 0; margin: 6px 0 14px; }
+.ami-ligne { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+.ami-ligne strong { overflow-wrap: anywhere; }
+.ami-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ami-vide { color: #666; font-size: 14px; }
+#ami-accueil { display: inline-block; margin: 0 0 10px; }

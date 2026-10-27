@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co wss://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
     <title>Ma bibliothèque</title>
-    <link rel="stylesheet" href="./css/style.css?v=5">
+    <link rel="stylesheet" href="./css/style.css?v=6">
 </head>
 <body>
     <h1>Ma bibliothèque</h1>
@@ -16,6 +16,7 @@
         <span id="sync-statut" hidden></span>
         <button type="button" id="sync-bouton" hidden>Actualiser</button>
         <button type="button" id="partage-bouton" hidden>Partager</button>
+        <button type="button" id="amis-bouton" hidden>Amis</button>
     </div>
 
     <p id="message" role="status" hidden></p>
@@ -114,7 +115,7 @@
         <p id="partage-resume"></p>
 
         <div id="partage-inactif" hidden>
-            <p>Le lien de partage est désactivé : personne ne peut voir ta bibliothèque.</p>
+            <p>Le lien de partage est désactivé : seuls tes amis peuvent voir tes séries publiques.</p>
             <button type="button" id="partage-activer">Activer le lien de partage</button>
         </div>
 
@@ -125,8 +126,7 @@
                 <button type="button" id="partage-copier">Copier le lien</button>
                 <button type="button" id="partage-envoyer" hidden>Envoyer…</button>
             </div>
-            <label class="case"><input type="checkbox" id="partage-notes"> Montrer mes notes de tomes aux visiteurs</label>
-            <p class="legende">Seules les séries rendues publiques sont visibles. Toute personne qui a ce lien peut les voir.</p>
+            <p class="legende">Seules les séries rendues publiques sont visibles. Toute personne qui a ce lien peut les voir, avec ou sans compte.</p>
             <div class="actions-livre">
                 <button type="button" id="partage-regenerer">Créer un nouveau lien</button>
                 <button type="button" id="partage-desactiver">Désactiver le lien</button>
@@ -134,6 +134,8 @@
         </div>
 
         <h3>Visibilité de mes séries</h3>
+        <p class="legende">Une série publique est visible par tes amis et, si ton lien est actif, par toute personne qui l'a. Une série privée n'est visible que par toi.</p>
+        <label class="case"><input type="checkbox" id="partage-notes"> Montrer mes notes de tomes (à mes amis et aux visiteurs du lien)</label>
         <div class="actions-livre">
             <button type="button" id="partage-tout-public">Tout rendre public</button>
             <button type="button" id="partage-tout-prive">Tout rendre privé</button>
@@ -142,13 +144,38 @@
         <p id="partage-erreur" role="alert"></p>
     </section>
 
-    <p id="version">Version 5</p>
+    <section id="vue-amis">
+        <button type="button" id="amis-retour">Retour</button>
+        <h2>Mes amis</h2>
+        <p class="legende">Tes amis voient les séries que tu as rendues publiques, et tu vois les leurs. Une demande doit être acceptée par l'autre personne.</p>
 
-    <script src="./js/config.js?v=5" defer></script>
-    <script src="./js/vendor/supabase.js?v=5" defer></script>
-    <script src="./js/script.js?v=5" defer></script>
-    <script src="./js/compte.js?v=5" defer></script>
-    <script src="./js/sync.js?v=5" defer></script>
-    <script src="./js/partager.js?v=5" defer></script>
+        <form id="amis-form" novalidate>
+            <label for="amis-pseudo">Ajouter un ami (son pseudo)</label>
+            <input id="amis-pseudo" type="text" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="pseudo">
+            <button type="submit" id="amis-envoyer">Envoyer la demande</button>
+        </form>
+        <p id="amis-info" role="status"></p>
+        <p id="amis-erreur" role="alert"></p>
+        <p id="amis-direct" class="legende" hidden></p>
+
+        <h3 id="amis-recues-titre" hidden>Demandes reçues</h3>
+        <ul id="amis-recues" class="liste-amis" hidden></ul>
+
+        <h3 id="amis-liste-titre" hidden>Mes amis</h3>
+        <ul id="amis-liste" class="liste-amis" hidden></ul>
+
+        <h3 id="amis-envoyees-titre" hidden>Demandes envoyées (en attente)</h3>
+        <ul id="amis-envoyees" class="liste-amis" hidden></ul>
+    </section>
+
+    <p id="version">Version 6</p>
+
+    <script src="./js/config.js?v=6" defer></script>
+    <script src="./js/vendor/supabase.js?v=6" defer></script>
+    <script src="./js/script.js?v=6" defer></script>
+    <script src="./js/compte.js?v=6" defer></script>
+    <script src="./js/sync.js?v=6" defer></script>
+    <script src="./js/partager.js?v=6" defer></script>
+    <script src="./js/amis.js?v=6" defer></script>
 </body>
 </html>

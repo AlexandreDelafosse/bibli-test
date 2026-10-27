@@ -24,10 +24,10 @@
         const actif = Boolean(etatPartage && etatPartage.actif);
         champ("partage-actif").hidden = lecture || !actif;
         champ("partage-inactif").hidden = lecture || actif;
-        if (actif) {
-            champ("partage-lien").value = lienPour(etatPartage.jeton);
-            champ("partage-notes").checked = etatPartage.notes_visibles;
-        }
+        if (actif) champ("partage-lien").value = lienPour(etatPartage.jeton);
+        // les notes se règlent même sans lien actif : elles servent aussi aux amis
+        champ("partage-notes").checked = Boolean(etatPartage && etatPartage.notes_visibles);
+        champ("partage-notes").disabled = lecture;
 
         const publiques = bibliotheque.filter(l => l.Visibilite === "public");
         champ("partage-resume").textContent = `${publiques.length} série(s) publique(s) sur ${bibliotheque.length}.`;
@@ -60,15 +60,19 @@
         }
     }
 
+    async function lireEtat() {
+        const { data, error } = await client.from("partages").select("jeton,actif,notes_visibles").maybeSingle();
+        if (error) throw error;
+        return normaliser(data);
+    }
+
     async function ouvrir() {
         erreur("");
         etatPartage = undefined;
         afficher();
         montrerVue("vue-partage");
         try {
-            const { data, error } = await client.from("partages").select("jeton,actif,notes_visibles").maybeSingle();
-            if (error) throw error;
-            etatPartage = normaliser(data);
+            etatPartage = await lireEtat();
         } catch (e) {
             etatPartage = null;
             erreur("Impossible de lire ton réglage de partage pour l'instant.");
@@ -104,7 +108,7 @@
         const valeur = evenement.target.checked;
         agir(async () => {
             await appeler("partage_notes", { p_visibles: valeur });
-            if (etatPartage) etatPartage.notes_visibles = valeur;
+            etatPartage = await lireEtat(); // la base crée le réglage s'il n'existait pas encore
         });
     });
 
@@ -131,7 +135,7 @@
         const concernees = bibliotheque.filter(l => l.Visibilite !== valeur);
         if (!concernees.length) return;
         const question = valeur === "public"
-            ? `Rendre ${concernees.length} série(s) publique(s) ? Elles seront visibles par toute personne qui a ton lien.`
+            ? `Rendre ${concernees.length} série(s) publique(s) ? Elles seront visibles par tes amis et, si ton lien est actif, par toute personne qui l'a.`
             : `Rendre ${concernees.length} série(s) privée(s) ?`;
         if (!confirm(question)) return;
         concernees.forEach(l => { l.Visibilite = valeur; });
