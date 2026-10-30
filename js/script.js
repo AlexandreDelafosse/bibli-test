@@ -460,7 +460,7 @@ async function importer(fichier) {
 
 // ===== Navigation entre les vues =====
 function montrerVue(nom) {
-    ["vue-liste", "vue-detail", "vue-form", "vue-compte", "vue-partage", "vue-amis"].forEach(id => {
+    ["vue-liste", "vue-detail", "vue-form", "vue-compte", "vue-partage", "vue-amis", "vue-envies"].forEach(id => {
         champ(id).style.display = id === nom ? "block" : "none";
     });
 }
@@ -475,7 +475,7 @@ async function changerPortee(nouvelle) {
     tomeActif = null;
     afficherListe();
     // une fiche ou un formulaire ouvert montrerait des données de l'autre collection
-    if (["vue-detail", "vue-form", "vue-partage", "vue-amis"].some(id => champ(id).style.display === "block")) montrerVue("vue-liste");
+    if (["vue-detail", "vue-form", "vue-partage", "vue-amis", "vue-envies"].some(id => champ(id).style.display === "block")) montrerVue("vue-liste");
     await nettoyerOrphelines();
 }
 

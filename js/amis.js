@@ -100,10 +100,10 @@
         liste.hidden = !pseudos.length && !vide;
     }
 
-    function lienVers(pseudo) {
+    function lienVers(pseudo, suite, texte) {
         const a = document.createElement("a");
-        a.href = "./ami.html#" + pseudo; // pseudo déjà validé : lettres minuscules, chiffres, _
-        a.textContent = "Voir sa bibliothèque";
+        a.href = "./ami.html#" + pseudo + suite; // pseudo déjà validé : lettres minuscules, chiffres, _
+        a.textContent = texte;
         return a;
     }
 
@@ -121,7 +121,8 @@
 
         remplir("amis-liste", "amis-liste-titre", d.amis, (p) => ligne(
             p,
-            lienVers(p),
+            lienVers(p, "", "Voir sa bibliothèque"),
+            lienVers(p, "/envies", "Ses envies"),
             creerBouton("Retirer", () => {
                 if (!confirm(`Retirer ${p} de tes amis ? Vous ne verrez plus vos bibliothèques.`)) return;
                 agir(() => rpc("ami_retirer", { p_pseudo: p }), `${p} a été retiré de tes amis.`);

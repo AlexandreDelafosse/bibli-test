@@ -7,7 +7,7 @@
     <meta name="referrer" content="no-referrer">
     <meta name="robots" content="noindex, nofollow">
     <title>Bibliothèque d'un ami</title>
-    <link rel="stylesheet" href="./css/style.css?v=6">
+    <link rel="stylesheet" href="./css/style.css?v=7">
 </head>
 <body class="visiteur" data-mode="ami">
     <a id="ami-accueil" href="./index.html">← Ma bibliothèque</a>
@@ -15,25 +15,42 @@
     <p id="v-etat" role="status">Chargement…</p>
     <p id="v-maj" class="legende" hidden></p>
 
-    <section id="v-liste" hidden>
-        <p id="v-sous-titre"></p>
-        <div id="filtres">
-            <input id="v-recherche" type="search" maxlength="100" placeholder="Rechercher un titre ou un auteur" aria-label="Rechercher">
-            <select id="v-categorie" aria-label="Catégorie"></select>
-            <p id="compteur"></p>
-        </div>
-        <div id="v-cartes"></div>
+    <div id="v-onglets" class="modes" hidden>
+        <button type="button" id="onglet-biblio" class="actif" aria-pressed="true">Bibliothèque</button>
+        <button type="button" id="onglet-envies" aria-pressed="false">Envies</button>
+    </div>
+
+    <div id="v-biblio">
+        <section id="v-liste" hidden>
+            <p id="v-sous-titre"></p>
+            <div id="filtres">
+                <input id="v-recherche" type="search" maxlength="100" placeholder="Rechercher un titre ou un auteur" aria-label="Rechercher">
+                <select id="v-categorie" aria-label="Catégorie"></select>
+                <p id="compteur"></p>
+            </div>
+            <div id="v-cartes"></div>
+        </section>
+
+        <section id="v-detail" hidden>
+            <button type="button" id="v-retour">Retour</button>
+            <div id="v-contenu"></div>
+        </section>
+    </div>
+
+    <section id="v-envies" hidden>
+        <p id="e-sous-titre">Ses envies : tu peux en réserver une pour la lui offrir.</p>
+        <p class="legende">Surprise : cette personne ne voit jamais les réservations. Les autres amis voient seulement « Déjà réservé ».</p>
+        <p id="e-info" role="status"></p>
+        <p id="e-erreur" role="alert"></p>
+        <p id="e-direct" class="legende" hidden></p>
+        <ul id="e-liste" class="liste-amis"></ul>
     </section>
 
-    <section id="v-detail" hidden>
-        <button type="button" id="v-retour">Retour</button>
-        <div id="v-contenu"></div>
-    </section>
+    <p id="version">Version 7</p>
 
-    <p id="version">Version 6</p>
-
-    <script src="./js/config.js?v=6" defer></script>
-    <script src="./js/vendor/supabase.js?v=6" defer></script>
-    <script src="./js/partage.js?v=6" defer></script>
+    <script src="./js/config.js?v=7" defer></script>
+    <script src="./js/vendor/supabase.js?v=7" defer></script>
+    <script src="./js/partage.js?v=7" defer></script>
+    <script src="./js/envies-ami.js?v=7" defer></script>
 </body>
 </html>

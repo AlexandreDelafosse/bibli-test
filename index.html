@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co wss://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
     <title>Ma bibliothèque</title>
-    <link rel="stylesheet" href="./css/style.css?v=6">
+    <link rel="stylesheet" href="./css/style.css?v=7">
 </head>
 <body>
     <h1>Ma bibliothèque</h1>
@@ -17,6 +17,7 @@
         <button type="button" id="sync-bouton" hidden>Actualiser</button>
         <button type="button" id="partage-bouton" hidden>Partager</button>
         <button type="button" id="amis-bouton" hidden>Amis</button>
+        <button type="button" id="envies-bouton" hidden>Mes envies</button>
     </div>
 
     <p id="message" role="status" hidden></p>
@@ -168,14 +169,41 @@
         <ul id="amis-envoyees" class="liste-amis" hidden></ul>
     </section>
 
-    <p id="version">Version 6.1</p>
+    <section id="vue-envies">
+        <button type="button" id="envies-retour">Retour</button>
+        <h2>Mes envies</h2>
+        <p class="legende">Tes amis voient cette liste et peuvent réserver une envie pour te l'offrir. Tu ne verras jamais qui a réservé quoi : la surprise est préservée.</p>
 
-    <script src="./js/config.js?v=6" defer></script>
-    <script src="./js/vendor/supabase.js?v=6" defer></script>
-    <script src="./js/script.js?v=6" defer></script>
-    <script src="./js/compte.js?v=6" defer></script>
-    <script src="./js/sync.js?v=6" defer></script>
-    <script src="./js/partager.js?v=6" defer></script>
-    <script src="./js/amis.js?v=6" defer></script>
+        <form id="envies-form" novalidate>
+            <label for="envies-titre-saisie">Titre *</label>
+            <input id="envies-titre-saisie" type="text" maxlength="120" autocomplete="off">
+
+            <label for="envies-type">Catégorie</label>
+            <select id="envies-type"></select>
+
+            <label for="envies-auteur">Auteur / dessinateur</label>
+            <input id="envies-auteur" type="text" maxlength="80" autocomplete="off">
+
+            <label for="envies-note">Précision (tome, édition…)</label>
+            <input id="envies-note" type="text" maxlength="200" autocomplete="off" placeholder="Tome 12, édition collector…">
+
+            <button type="submit" id="envies-ajouter">Ajouter à mes envies</button>
+        </form>
+        <p id="envies-info" role="status"></p>
+        <p id="envies-erreur" role="alert"></p>
+        <p id="envies-compteur" class="legende"></p>
+        <ul id="envies-liste" class="liste-amis"></ul>
+    </section>
+
+    <p id="version">Version 7</p>
+
+    <script src="./js/config.js?v=7" defer></script>
+    <script src="./js/vendor/supabase.js?v=7" defer></script>
+    <script src="./js/script.js?v=7" defer></script>
+    <script src="./js/compte.js?v=7" defer></script>
+    <script src="./js/sync.js?v=7" defer></script>
+    <script src="./js/partager.js?v=7" defer></script>
+    <script src="./js/amis.js?v=7" defer></script>
+    <script src="./js/envies.js?v=7" defer></script>
 </body>
 </html>

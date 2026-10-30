@@ -55,6 +55,8 @@
             : { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
     });
 
+    if (MODE_AMI) globalThis.clientAmi = client; // partagé avec envies-ami.js : une seule session sur la page
+
     async function avoirSession() {
         if (!MODE_AMI) return true;
         try {
@@ -561,7 +563,7 @@
         cibleCourante = "";
         reinitialiser();
         const brut = location.hash.replace(/^#/, "");
-        const cible = MODE_AMI ? brut.toLowerCase() : brut;
+        const cible = MODE_AMI ? brut.toLowerCase().split("/")[0] : brut; // « pseudo » ou « pseudo/envies »
         if (!(MODE_AMI ? PSEUDO_VALIDE : JETON_VALIDE).test(cible)) {
             etat(TEXTES.invalide);
             return;

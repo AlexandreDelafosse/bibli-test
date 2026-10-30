@@ -4,7 +4,7 @@ button { cursor: pointer; }
 #message { background: #fff3cd; border: 1px solid #e0c36a; padding: 8px 12px; border-radius: 4px; max-width: 600px; }
 
 /* ===== Vues ===== */
-#vue-detail, #vue-form, #vue-compte, #vue-partage, #vue-amis { display: none; max-width: 600px; }
+#vue-detail, #vue-form, #vue-compte, #vue-partage, #vue-amis, #vue-envies { display: none; max-width: 600px; }
 
 /* ===== Compte ===== */
 #barre-compte { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; font-size: 14px; }
@@ -100,3 +100,17 @@ body.visiteur #v-liste, body.visiteur #v-detail { max-width: 600px; }
 .ami-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ami-vide { color: #666; font-size: 14px; }
 #ami-accueil { display: inline-block; margin: 0 0 10px; }
+
+/* ===== Envies ===== */
+#envies-form input[type="text"], #envies-form select { width: 100%; box-sizing: border-box; padding: 6px; font-size: 16px; margin: 4px 0 8px; }
+#envies-form button { margin-top: 4px; }
+#envies-info, #e-info { margin: 6px 0; min-height: 1.2em; color: #2e7d32; }
+#envies-erreur, #e-erreur { margin: 6px 0; min-height: 1.2em; color: #c0392b; }
+.envie-ligne { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid #e0e0e0; }
+.envie-ligne > div { min-width: 0; overflow-wrap: anywhere; }
+.envie-ligne p { margin: 2px 0 0; }
+.envie-statut { color: #666; font-size: 14px; }
+.envie-statut.moi { color: #2e7d32; font-weight: bold; }
+#v-onglets { max-width: 600px; }
+#e-direct.direct { color: #2e7d32; }
+#v-envies { max-width: 600px; }
