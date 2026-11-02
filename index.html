@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src https://hcxnqordxnwnfesdbndr.supabase.co wss://hcxnqordxnwnfesdbndr.supabase.co; base-uri 'none'; form-action 'none'">
     <title>Ma bibliothèque</title>
-    <link rel="stylesheet" href="./css/style.css?v=7">
+    <link rel="stylesheet" href="./css/style.css?v=8">
 </head>
 <body>
     <h1>Ma bibliothèque</h1>
@@ -27,6 +27,7 @@
 
         <div class="barre-actions">
             <button type="button" id="bouton-ajouter">+ Ajouter un livre</button>
+            <button type="button" id="bouton-masse">Ajout en masse</button>
             <button type="button" id="bouton-exporter">Exporter</button>
             <button type="button" id="bouton-importer">Importer</button>
         </div>
@@ -195,15 +196,37 @@
         <ul id="envies-liste" class="liste-amis"></ul>
     </section>
 
-    <p id="version">Version 7</p>
+    <section id="vue-masse">
+        <button type="button" id="masse-retour">Retour</button>
+        <h2>Ajout en masse</h2>
+        <p class="legende">Colle une série par ligne. Colonnes séparées par « ; » (ou une tabulation si tu copies depuis un tableur) : <strong>Titre ; Catégorie ; Nombre de tomes ; Tomes possédés ; Auteur ; Tags</strong>. Seul le titre est obligatoire.</p>
+        <p class="legende">Exemple : <code>One Piece ; Manga ; 107 ; 1-50 ; Eiichiro Oda ; shonen, aventure</code> — pour « tous les tomes », écris <code>tous</code> dans « Tomes possédés ».</p>
 
-    <script src="./js/config.js?v=7" defer></script>
-    <script src="./js/vendor/supabase.js?v=7" defer></script>
-    <script src="./js/script.js?v=7" defer></script>
-    <script src="./js/compte.js?v=7" defer></script>
-    <script src="./js/sync.js?v=7" defer></script>
-    <script src="./js/partager.js?v=7" defer></script>
-    <script src="./js/amis.js?v=7" defer></script>
-    <script src="./js/envies.js?v=7" defer></script>
+        <label for="masse-categorie">Catégorie par défaut (si la colonne est vide)</label>
+        <select id="masse-categorie"></select>
+
+        <label for="masse-texte">Tes séries</label>
+        <textarea id="masse-texte" rows="8" maxlength="40000" spellcheck="false" autocomplete="off" placeholder="Berserk ; Manga ; 41 ; 1-41 ; Kentaro Miura&#10;Les Cités obscures ; BD ; 12 ; 1-5, 8"></textarea>
+
+        <p id="masse-resume" role="status"></p>
+        <ul id="masse-liste" class="liste-amis"></ul>
+
+        <div class="form-actions">
+            <button type="button" id="masse-valider" disabled>Ajouter</button>
+            <button type="button" id="masse-annuler">Annuler</button>
+        </div>
+    </section>
+
+    <p id="version">Version 8</p>
+
+    <script src="./js/config.js?v=8" defer></script>
+    <script src="./js/vendor/supabase.js?v=8" defer></script>
+    <script src="./js/script.js?v=8" defer></script>
+    <script src="./js/compte.js?v=8" defer></script>
+    <script src="./js/sync.js?v=8" defer></script>
+    <script src="./js/partager.js?v=8" defer></script>
+    <script src="./js/amis.js?v=8" defer></script>
+    <script src="./js/envies.js?v=8" defer></script>
+    <script src="./js/masse.js?v=8" defer></script>
 </body>
 </html>
